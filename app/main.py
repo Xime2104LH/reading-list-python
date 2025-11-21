@@ -11,7 +11,7 @@ async def lifespan(api: FastAPI):
     print(" 🔴 Sutting down")
 
 def get_app() -> FastAPI:
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(root_path="/api/v1",lifespan=lifespan)
     app.include_router(auth.router)
     app.include_router(url.router)
     return app
