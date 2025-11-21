@@ -1,6 +1,8 @@
 import bcrypt
 import jwt
-from app.models.models import ResponseGlobal
+from app.models.models import AuthorizationResponse
+from fastapi import Request
+from fastapi import HTTPException
 
 secret_key = "clave-secreta-ximenius123"
 algorithm = 'HS256'
@@ -19,19 +21,29 @@ def checking_password(pw_input: str, pw_hashed: str) -> bool:
 
     return is_same_password
 
-def create_jwt_token(payload):
+def create_jwt_token(payload) -> str:
     token = jwt.encode(payload, secret_key, algorithm=algorithm)
 
     return token
 
-def validate_jwt_token(request):
+def validate_jwt_token(request: Request) -> AuthorizationResponse:
     auth = request.headers.get("authorization")
-    token_formatted = auth.replace("Bearer ", "")
 
     try:
-        decoded_payload = jwt.decode(token_formatted, secret_key, algorithms=[algorithm])
-        return decoded_payload
+        if auth:
+            token_formatted = auth.replace("Bearer ", "")
+            decoded_payload = jwt.decode(token_formatted, secret_key, algorithms=[algorithm])
+            token_decoded = AuthorizationResponse(
+                user_id=decoded_payload["id"],
+                name=decoded_payload["name"],
+                email=decoded_payload["email"],
+                exp=decoded_payload["exp"]
+            )
+
+            return token_decoded
     except jwt.ExpiredSignatureError:
-        return ResponseGlobal(success=False, message="Token has expired. Please log in again.", data=None)
+        raise HTTPException(status_code=401, detail="Token has expired. Please log in again.")
     except jwt.InvalidTokenError:
-        return ResponseGlobal(success=False, message="Invalid token. Access denied.", data=None)
+        raise HTTPException(status_code=401, detail="Invalid token. Access denied.")
+
+    raise HTTPException(status_code=400, detail="Error en Autorización")
