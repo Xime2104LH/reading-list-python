@@ -21,6 +21,8 @@ async def sign_in(body: LoginBody, session: Session = Depends(get_session)):
 
     is_correct_pw = checking_password(body.password, user_found.password)
     user_dict = user_found.model_dump(exclude={"password"})
+    id = str(user_dict["id"])
+    user_dict["id"] = id
     user_dict["exp"] = int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp())
 
     if is_correct_pw:
