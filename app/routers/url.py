@@ -3,6 +3,7 @@ from app.services.encryption_service import validate_jwt_token
 from app.models.models import UrlCreateSchema, Url, UrlTags, ResponseGlobal, UrlTagsResponse, UpdateTagsBody
 from app.db.database_setup import engine
 from sqlmodel import Session, select
+import uuid
 
 router = APIRouter(
     prefix="/url",
@@ -59,10 +60,10 @@ def add_url(body: UrlCreateSchema,  decoded_user: dict = Depends(validate_jwt_to
 
         session.commit()
 
-    return ResponseGlobal(success=True, message="Se agregó correctamente la Url a la lista", data=None)
+    return ResponseGlobal(success=True, message="Se agregó correctamente la Url a la lista", data=url)
 
 @router.delete("/{url_id}")
-def delete_url(url_id: int, session: Session = Depends(get_session), decoded_user : dict = Depends(validate_jwt_token)):
+def delete_url(url_id: uuid.UUID, session: Session = Depends(get_session), decoded_user : dict = Depends(validate_jwt_token)):
     url_found = session.exec(select(Url).where(Url.id == url_id)).one()
     if not url_found:
         raise ResponseGlobal(success=False, message="No se encontró la URL", data=None)
@@ -79,7 +80,7 @@ def delete_url(url_id: int, session: Session = Depends(get_session), decoded_use
     return ResponseGlobal(success=True, message="Eliminado correctamente", data=None)
 
 @router.put("/{url_id}")
-def update_tags_by_url(url_id: int, tags: UpdateTagsBody, session: Session = Depends(get_session), decoded_user: dict = Depends(validate_jwt_token)):
+def update_tags_by_url(url_id: uuid.UUID, tags: UpdateTagsBody, session: Session = Depends(get_session), decoded_user: dict = Depends(validate_jwt_token)):
     url_found = session.exec(select(Url).where(Url.id == url_id)).one()
 
     if not url_found:
